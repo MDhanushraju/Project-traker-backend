@@ -1,23 +1,30 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    SONAR_HOST_URL = 'http://localhost:9000'
-  }
-
-  stages {
-    stage('SonarQube') {
-      steps {
-        withCredentials([string(credentialsId: 'sonar-backend-token', variable: 'SONAR_TOKEN')]) {
-          withSonarQubeEnv('SonarQube') {
-            sh '''
-              mvn clean verify sonar:sonar \
-              -Dsonar.projectKey=project-tracker-backend \
-              -Dsonar.login=$SONAR_TOKEN
-            '''
-          }
-        }
-      }
+    tools {
+        jdk 'jdk-21'
     }
-  }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                bat 'gradlew clean build'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('Sonar') {
+                    bat 'gradlew sonar'
+                }
+            }
+        }
+    }
 }
