@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'jdk-21'
+        maven 'maven'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                bat 'mvn clean test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('Sonar') {
+                    bat 'mvn sonar:sonar'
+                }
+            }
+        }
+    }
+}
