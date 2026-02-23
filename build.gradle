@@ -47,5 +47,7 @@ sonar {
         property "sonar.projectName", "project-tracker-backend"
         property "sonar.host.url", "http://localhost:9000"
         property "sonar.token", System.getenv("SONAR_TOKEN")
+        property "sonar.gradle.skipCompile", "true"
+        property "sonar.working.directory", "${buildDir}/sonar"
     }
 }
