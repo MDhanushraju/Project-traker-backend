@@ -31,10 +31,10 @@ cd d:\Project_traker\backend
 .\.mvn\maven\bin\mvn.cmd clean verify sonar:sonar -Dsonar.projectKey=project-tracker-backend -Dsonar.host.url=http://localhost:9000 -Dsonar.token=YOUR_TOKEN
 ```
 
-**Open HTML:**  
-**http://localhost:9000** → select project `project-tracker-backend`
-
-Shows: issues, security hotspots, code smells, coverage (HTML in browser).
+**Open HTML (SonarQube is the report – no separate .html file):**  
+1. Open **http://localhost:9000** in your browser.  
+2. Log in → **Projects** → select `project-tracker-backend` (or `project-tracker-frontend`).  
+3. The project page is the “test”/quality report: issues, security hotspots, coverage, quality gate (all HTML in browser).
 
 ---
 
@@ -55,3 +55,8 @@ Shows: all REST endpoints, try-it-out, request/response schemas (HTML in browser
 | JUnit HTML | `backend\target\site\surefire-report.html` (after `.\generate-test-report.ps1`) |
 | SAST HTML | http://localhost:9000 |
 | API HTML | http://localhost:8080/swagger-ui.html |
+
+
+to get test report
+cd d:\Project_traker\backend
+.\generate-test-report.ps1
