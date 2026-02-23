@@ -16,13 +16,22 @@ REST API for the Project Tracker app. Requires **PostgreSQL** and **JDK 21**.
 - **API:** http://localhost:8080
 - **Swagger:** http://localhost:8080/swagger-ui.html
 
+## HTML unit test report
+
+```powershell
+.\generate-test-report.ps1
+```
+
+Report: `target\site\surefire-report.html` — see `docs/HTML_TEST_REPORT.md`.
+
 ## Structure
 
 ```
 backend/
 ├── src/                 # Java source
 ├── run-backend.ps1      # Start script
-├── docs/                # SONARQUBE.md, SWAGGER.md (API docs)
+├── generate-test-report.ps1   # HTML test report
+├── docs/                # SONARQUBE.md, SWAGGER.md, HTML_TEST_REPORT.md, JUNIT_SAST_API.md
 ├── scripts/
 └── pom.xml
 ```
