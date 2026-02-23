@@ -2,28 +2,21 @@ pipeline {
     agent any
 
     tools {
-        jdk 'jdk-21'
-        maven 'maven'
+        jdk 'jdk-21'   
     }
 
     stages {
-
-        stage('Checkout') {
+        stage('Build') {
             steps {
-                checkout scm
-            }
-        }
-
-        stage('Build & Test') {
-            steps {
-                bat 'mvn clean test'
+                sh 'chmod +x gradlew'
+                sh './gradlew clean build -x test'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonar') {
-                    bat 'mvn sonar:sonar'
+                withSonarQubeEnv('SonarQube') {
+                    sh './gradlew sonar'
                 }
             }
         }

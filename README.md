@@ -1,15 +1,14 @@
 # Project Tracker — Backend (Spring Boot)
 
-REST API for the Project Tracker app. Requires **PostgreSQL** and **JDK 21**.
+REST API for the Project Tracker app. Requires **PostgreSQL** and **JDK 21**. Build: **Gradle**.
 
 ## How to run
 
 | Option | Command |
 |--------|---------|
 | PowerShell script | `.\run-backend.ps1` |
-| Maven | `mvn spring-boot:run` |
-| Maven wrapper | `./mvnw spring-boot:run` or `mvnw.cmd spring-boot:run` |
-| With Java path | `$env:JAVA_HOME = "C:\Program Files\Java\jdk-21"; mvn spring-boot:run` |
+| Gradle | `.\gradlew.bat bootRun` or `gradle bootRun` |
+| With Java path | `$env:JAVA_HOME = "C:\Program Files\Java\jdk-21"; .\gradlew.bat bootRun` |
 
 ## Endpoints
 
@@ -22,16 +21,27 @@ REST API for the Project Tracker app. Requires **PostgreSQL** and **JDK 21**.
 .\generate-test-report.ps1
 ```
 
-Report: `target\site\surefire-report.html` — see `docs/HTML_TEST_REPORT.md`.
+Report: `build\reports\tests\test\index.html` — see `docs/HTML_TEST_REPORT.md`.
+
+## Deploy (Railway / Railpack)
+
+1. In Railway: **Settings → General → Root Directory** set to **`backend`**.
+2. Ensure **`gradle/wrapper/gradle-wrapper.jar`** is committed (required for `./gradlew` in the image). If it’s missing, add it and push.
+3. Redeploy. Nixpacks will detect Gradle and run `./gradlew clean build` then `java -jar build/libs/*.jar` with `PORT` set by Railway.
 
 ## Structure
 
 ```
 backend/
 ├── src/                 # Java source
+├── build.gradle         # Gradle build
+├── settings.gradle
+├── gradle/wrapper/      # Gradle wrapper (include gradle-wrapper.jar for CI/deploy)
 ├── run-backend.ps1      # Start script
 ├── generate-test-report.ps1   # HTML test report
 ├── docs/                # SONARQUBE.md, SWAGGER.md, HTML_TEST_REPORT.md, JUNIT_SAST_API.md
 ├── scripts/
-└── pom.xml
+└── (no Maven: pom.xml, .mvn, mvnw removed)
 ```
+
+If the **`.mvn`** folder is still present (e.g. locked during conversion), close any process using it (IDE, running backend) and delete it manually: `Remove-Item -Recurse -Force .mvn`.
