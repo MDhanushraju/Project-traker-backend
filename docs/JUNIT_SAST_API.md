@@ -52,7 +52,7 @@ Shows: all REST endpoints, try-it-out, request/response schemas (HTML in browser
 
 | What | URL or path |
 |------|-------------|
-| JUnit HTML | `backend\target\site\surefire-report.html` (after `.\generate-test-report.ps1`) |
+| JUnit HTML | `backend\build\reports\tests\test\index.html` (after `.\generate-test-report.ps1`) |
 | SAST HTML | http://localhost:9000 |
 | API HTML | http://localhost:8080/swagger-ui.html |
 
