@@ -32,8 +32,17 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest req) {
-        User user;
+        if (req == null || req.getEmail() == null || req.getPassword() == null) {
+            throw new UnauthorizedException("Email and password are required");
+        }
         String email = req.getEmail().trim();
+        if (email.isEmpty()) {
+            throw new UnauthorizedException("Email is required");
+        }
+        if (req.getPassword().trim().isEmpty()) {
+            throw new UnauthorizedException("Password is required");
+        }
+        User user;
         String idCard = req.getIdCardNumber() != null ? req.getIdCardNumber().trim() : "";
         if (!idCard.isBlank()) {
             user = userRepository.findByEmailAndIdCardNumber(email, idCard)
@@ -42,57 +51,71 @@ public class AuthService {
             user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
         }
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+        if (user.getPassword() == null || !passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new UnauthorizedException("Invalid email or password");
         }
-
-        String roleName = user.getRole().name().toLowerCase();
+        Role role = user.getRole();
+        if (role == null) {
+            throw new AuthException("User role not set");
+        }
+        String roleName = role.name().toLowerCase();
         String token = jwtService.generateToken(user.getEmail(), roleName);
         return new AuthResponse(token, roleName, user.getEmail(), user.getFullName());
     }
 
     @Transactional
     public AuthResponse signUp(SignUpRequest req) {
-        String email = req.getEmail() != null ? req.getEmail().trim().toLowerCase() : "";
-        String fullName = req.getFullName() != null ? req.getFullName().trim() : "";
-        String password = req.getPassword() != null ? req.getPassword() : "";
-        String confirmPassword = req.getConfirmPassword() != null ? req.getConfirmPassword() : "";
-
-        if (!password.equals(confirmPassword)) {
-            throw new AuthException("Passwords do not match");
-        }
-        if (!isValidPassword(password)) {
-            throw new AuthException("Password must be at least 8 characters with one number and one special character");
-        }
-        if (email.isBlank()) {
-            throw new AuthException("Email is required");
-        }
-        if (userRepository.existsByEmail(email)) {
-            throw new AuthException("Email already registered");
-        }
-
-        Role role = parseRole(req.getRole() != null ? req.getRole() : "member");
-        User user = new User(
-                fullName.isEmpty() ? email : fullName,
-                email,
-                req.getIdCardNumber() != null && !req.getIdCardNumber().isBlank() ? req.getIdCardNumber().trim() : null,
-                passwordEncoder.encode(password),
-                role
-        );
-        if (req.getPosition() != null && !req.getPosition().isBlank()) {
-            positionRepository.findByName(req.getPosition().trim())
-                    .ifPresent(user::setPosition);
-        }
         try {
+            if (req == null) {
+                throw new AuthException("Request is required");
+            }
+            String email = req.getEmail() != null ? req.getEmail().trim().toLowerCase() : "";
+            String fullName = req.getFullName() != null ? req.getFullName().trim() : "";
+            String password = req.getPassword() != null ? req.getPassword() : "";
+            String confirmPassword = req.getConfirmPassword() != null ? req.getConfirmPassword() : "";
+
+            if (!password.equals(confirmPassword)) {
+                throw new AuthException("Passwords do not match");
+            }
+            if (!isValidPassword(password)) {
+                throw new AuthException("Password must be at least 8 characters with one number and one special character");
+            }
+            if (email.isBlank()) {
+                throw new AuthException("Email is required");
+            }
+            if (userRepository.existsByEmail(email)) {
+                throw new AuthException("Email already registered");
+            }
+
+            Role role = parseRole(req.getRole() != null ? req.getRole() : "member");
+            User user = new User(
+                    fullName.isEmpty() ? email : fullName,
+                    email,
+                    req.getIdCardNumber() != null && !req.getIdCardNumber().isBlank() ? req.getIdCardNumber().trim() : null,
+                    passwordEncoder.encode(password),
+                    role
+            );
+            if (req.getPosition() != null && !req.getPosition().isBlank()) {
+                positionRepository.findByName(req.getPosition().trim())
+                        .ifPresent(user::setPosition);
+            }
             user = userRepository.save(user);
+
+            Role savedRole = user.getRole();
+            if (savedRole == null) {
+                savedRole = role;
+            }
+            String roleName = savedRole.name().toLowerCase();
+            String token = jwtService.generateToken(user.getEmail(), roleName);
+            return new AuthResponse(token, roleName, user.getEmail(), user.getFullName());
+        } catch (AuthException e) {
+            throw e;
         } catch (Exception e) {
-            String msg = e.getMessage() != null && e.getMessage().contains("duplicate") ? "Email already registered" : "Registration failed. Please try again.";
+            String msg = e.getMessage() != null && (e.getMessage().toLowerCase().contains("duplicate") || e.getMessage().toLowerCase().contains("unique"))
+                    ? "Email already registered"
+                    : "Registration failed. Please try again.";
             throw new AuthException(msg, e);
         }
-
-        String roleName = user.getRole().name().toLowerCase();
-        String token = jwtService.generateToken(user.getEmail(), roleName);
-        return new AuthResponse(token, roleName, user.getEmail(), user.getFullName());
     }
 
     public Role parseRole(String role) {
