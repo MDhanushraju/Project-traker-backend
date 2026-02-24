@@ -53,22 +53,30 @@ public class AuthService {
 
     @Transactional
     public AuthResponse signUp(SignUpRequest req) {
-        if (!req.getPassword().equals(req.getConfirmPassword())) {
+        String email = req.getEmail() != null ? req.getEmail().trim().toLowerCase() : "";
+        String fullName = req.getFullName() != null ? req.getFullName().trim() : "";
+        String password = req.getPassword() != null ? req.getPassword() : "";
+        String confirmPassword = req.getConfirmPassword() != null ? req.getConfirmPassword() : "";
+
+        if (!password.equals(confirmPassword)) {
             throw new AuthException("Passwords do not match");
         }
-        if (!isValidPassword(req.getPassword())) {
+        if (!isValidPassword(password)) {
             throw new AuthException("Password must be at least 8 characters with one number and one special character");
         }
-        if (userRepository.existsByEmail(req.getEmail().trim().toLowerCase())) {
+        if (email.isBlank()) {
+            throw new AuthException("Email is required");
+        }
+        if (userRepository.existsByEmail(email)) {
             throw new AuthException("Email already registered");
         }
 
         Role role = parseRole(req.getRole() != null ? req.getRole() : "member");
         User user = new User(
-                req.getFullName().trim(),
-                req.getEmail().trim().toLowerCase(),
-                req.getIdCardNumber() != null ? req.getIdCardNumber().trim() : null,
-                passwordEncoder.encode(req.getPassword()),
+                fullName.isEmpty() ? email : fullName,
+                email,
+                req.getIdCardNumber() != null && !req.getIdCardNumber().isBlank() ? req.getIdCardNumber().trim() : null,
+                passwordEncoder.encode(password),
                 role
         );
         if (req.getPosition() != null && !req.getPosition().isBlank()) {

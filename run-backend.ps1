@@ -43,13 +43,28 @@ if (-not $GradleCmd) {
     exit 1
 }
 
-# Port check
-$port = Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | Select-Object -First 1
+# Port check (backend default port from application.yml)
+$backendPort = 10000
+$port = Get-NetTCPConnection -LocalPort $backendPort -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($port) {
-    Write-Host "Port 8080 in use by PID $($port.OwningProcess). Run: Stop-Process -Id $($port.OwningProcess) -Force" -ForegroundColor Yellow
+    Write-Host "Port $backendPort in use by PID $($port.OwningProcess). Run: Stop-Process -Id $($port.OwningProcess) -Force" -ForegroundColor Yellow
     exit 1
 }
 
 Set-Location $ProjectDir
-Write-Host "Running: $GradleCmd bootRun" -ForegroundColor Cyan
-& $GradleCmd bootRun @args
+
+# Load .env.local if present (DATABASE_PASSWORD etc.; file is gitignored)
+$envFile = Join-Path $ProjectDir ".env.local"
+if (Test-Path $envFile) {
+    Get-Content $envFile | ForEach-Object {
+        if ($_ -match '^\s*([^#][^=]+)=(.*)$') {
+            $key = $matches[1].Trim()
+            $val = $matches[2].Trim() -replace '^["'']|["'']$'
+            Set-Item -Path "env:$key" -Value $val
+        }
+    }
+}
+
+# Use 'local' profile so application-local.yml supplies DB username/password for local PostgreSQL (SCRAM auth)
+Write-Host "Running: $GradleCmd bootRun --args='--spring.profiles.active=local'" -ForegroundColor Cyan
+& $GradleCmd bootRun --args='--spring.profiles.active=local' @args

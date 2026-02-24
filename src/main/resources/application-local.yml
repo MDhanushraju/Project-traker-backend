@@ -1,0 +1,7 @@
+# Local profile: use when running against local PostgreSQL that requires username/password.
+# Render uses default profile only (DATABASE_URL has credentials in the URL).
+# Set DATABASE_PASSWORD (and optionally DATABASE_USERNAME) in env or here for local runs.
+spring:
+  datasource:
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:}

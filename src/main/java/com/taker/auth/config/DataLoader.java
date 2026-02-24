@@ -23,9 +23,10 @@ public class DataLoader {
                     positionRepository.save(new Position(name));
                 }
             }
+            String adminPw = encoder.encode("Admin@123");
             String pw = encoder.encode("Password@1");
             if (userRepository.findByEmail("admin@taker.com").isEmpty()) {
-                User admin = new User("Admin User", "admin@taker.com", "000-0000-001", pw, Role.ADMIN);
+                User admin = new User("Admin User", "admin@taker.com", "000-0000-001", adminPw, Role.ADMIN);
                 admin.setTitle("Administrator");
                 userRepository.save(admin);
                 System.out.println("Test user: admin@taker.com / Admin@123");
