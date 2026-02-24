@@ -1,6 +1,7 @@
 package com.taker.auth.exception;
 
 import com.taker.auth.dto.ApiResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -42,6 +43,13 @@ public class GlobalExceptionHandler {
         });
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.failure(400, "Validation failed", errors));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String msg = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("unique") ? "Email already registered" : "Invalid data. Please check your input.";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.failure(400, msg));
     }
 
     @ExceptionHandler(Exception.class)

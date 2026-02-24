@@ -83,7 +83,12 @@ public class AuthService {
             positionRepository.findByName(req.getPosition().trim())
                     .ifPresent(user::setPosition);
         }
-        user = userRepository.save(user);
+        try {
+            user = userRepository.save(user);
+        } catch (Exception e) {
+            String msg = e.getMessage() != null && e.getMessage().contains("duplicate") ? "Email already registered" : "Registration failed. Please try again.";
+            throw new AuthException(msg, e);
+        }
 
         String roleName = user.getRole().name().toLowerCase();
         String token = jwtService.generateToken(user.getEmail(), roleName);
