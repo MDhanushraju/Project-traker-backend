@@ -130,14 +130,22 @@ public class AuthService {
     }
 
     public AuthResponse loginWithRole(String roleStr) {
-        Role role = parseRole(roleStr);
-        User user = userRepository.findAll().stream()
-                .filter(u -> u.getRole() == role)
-                .findFirst()
-                .orElseThrow(() -> new AuthException("No user found for role: " + roleStr));
-        String roleName = user.getRole().name().toLowerCase();
-        String token = jwtService.generateToken(user.getEmail(), roleName);
-        return new AuthResponse(token, roleName, user.getEmail(), user.getFullName());
+        try {
+            Role role = parseRole(roleStr);
+            User user = userRepository.findAll().stream()
+                    .filter(u -> u.getRole() == role)
+                    .findFirst()
+                    .orElseThrow(() -> new AuthException("No user found for role: " + roleStr));
+            String roleName = user.getRole().name().toLowerCase();
+            String email = user.getEmail() != null ? user.getEmail() : "";
+            String fullName = user.getFullName() != null ? user.getFullName() : "";
+            String token = jwtService.generateToken(email, roleName);
+            return new AuthResponse(token, roleName, email, fullName);
+        } catch (AuthException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AuthException("No user found for role: " + roleStr, e);
+        }
     }
 
     private boolean isValidPassword(String password) {

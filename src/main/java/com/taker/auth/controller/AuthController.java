@@ -1,10 +1,12 @@
 package com.taker.auth.controller;
 
 import com.taker.auth.dto.*;
+import com.taker.auth.exception.AuthException;
 import com.taker.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,8 +53,15 @@ public class AuthController {
     @Operation(summary = "Demo login by role", description = "Get token for first user with given role. For testing: role=admin returns admin@taker.com token.")
     @PostMapping("/login-with-role")
     public ResponseEntity<ApiResponse<AuthResponse>> loginWithRole(@Valid @RequestBody LoginWithRoleRequest request) {
-        AuthResponse data = authService.loginWithRole(request.getRole());
-        return ResponseEntity.ok(ApiResponse.success("Login successful", data));
+        try {
+            AuthResponse data = authService.loginWithRole(request.getRole());
+            return ResponseEntity.ok(ApiResponse.success("Login successful", data));
+        } catch (AuthException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure(400, e.getMessage()));
+        } catch (Exception e) {
+            String role = request != null && request.getRole() != null ? request.getRole() : "unknown";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure(400, "No user found for role: " + role));
+        }
     }
 
     @Operation(summary = "Reset password", description = "Reset password using token from verify-captcha. Header: Authorization: Bearer <reset_token>")
